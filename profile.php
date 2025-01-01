@@ -14,6 +14,10 @@ if ($_SERVER['REQUEST_METHOD'] == "POST" && !empty($_POST['action']) && $_POST['
         unlink($_SESSION['logged']['image']);
     }
 
+    $query = "delete ferom posts where user_id = '$id'";
+    $result = mysqli_query($con, $query);
+
+
     header("Location: logout.php");
     die;
 
@@ -23,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST" && !empty($_POST['action']) && $_POST['
     // echo "<pre>";
     // print_r($_FILES);
     // die();
-    if (!empty($_FILES['image']['name']) && $_FILES['image']['error'] == 0) {
+    if (!empty($_FILES['image']['name']) && $_FILES['image']['error'] == 0 && $_FILES['image']['type'] == "image/jpeg") {
 
         $folder = 'uploads/';
 
@@ -70,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST" && !empty($_POST['action']) && $_POST['
     // echo "<pre>";
     // print_r($_FILES);
     // die();
-    if (!empty($_FILES['image']['name']) && $_FILES['image']['error'] == 0) {
+    if (!empty($_FILES['image']['name']) && $_FILES['image']['error'] == 0 && $_FILES['image']['type'] == "image/jpeg") {
 
         $folder = 'uploads/';
 
@@ -112,7 +116,62 @@ if ($_SERVER['REQUEST_METHOD'] == "POST" && !empty($_POST['action']) && $_POST['
 
     <div style="margin: auto; max-width: 600px;">
 
-        <?php if (!empty($_GET['action']) && $_GET['action'] == 'edit'): ?>
+        <?php if (!empty($_GET['action']) && $_GET['action'] == 'post_edit' && !empty($_GET['id'])): ?>
+            <?php
+            $id = $_GET['id'];
+            $query = "select * from posts where id = '$id' limit 1";
+            $result = mysqli_query($con, $query);
+            ?>
+
+            <?php if (mysqli_num_rows($result) > 0): ?>
+                <?php $row = mysqli_fetch_assoc($result); ?>
+
+                <h5>Edit a post</h5>
+                <form method="post" enctype="multipart/form-data" style="margin: auto; padding:10px;">
+
+                    <img src="<?= $row['image'] ?>" style="width:100%; height:200px; object-fit: cover;">
+                    image: <input type="file" name="image">
+
+                    <textarea name="post" rows="9"><?= $row['post'] ?></textarea><br>
+                    <input type="hidden" name="action" value="post_edit">
+
+
+                    <button>Save</button>
+
+                    <a href="profile.php">
+                        <button type="button">Cancel</button>
+                    </a>
+                </form>
+            <?php endif; ?>
+
+        <?php elseif (!empty($_GET['action']) && $_GET['action'] == 'post_delete' && !empty($_GET['id'])): ?>
+            <?php
+            $id = $_GET['id'];
+            $query = "select * from posts where id = '$id' limit 1";
+            $result = mysqli_query($con, $query);
+            ?>
+
+            <?php if (mysqli_num_rows($result) > 0): ?>
+                <?php $row = mysqli_fetch_assoc($result); ?>
+
+                <h3>Are you sure you want to delete this post?</h3>
+                <form method="post" enctype="multipart/form-data" style="margin: auto; padding:10px;">
+
+                    <img src="<?= $row['image'] ?>" style="width:100%; height:200px; object-fit: cover;">
+
+                    <div><?= $row['post'] ?></div><br>
+                    <input type="hidden" name="action" value="post_delete">
+
+
+                    <button>Delete</button>
+
+                    <a href="profile.php">
+                        <button type="button">Cancel</button>
+                    </a>
+                </form>
+            <?php endif; ?>
+
+        <?php elseif (!empty($_GET['action']) && $_GET['action'] == 'edit'): ?>
 
             <h2 style="text-align: center;">Edit Profile</h2>
             <form method="post" enctype="multipart/form-data" style="margin: auto; padding:10px;">
@@ -212,7 +271,8 @@ if ($_SERVER['REQUEST_METHOD'] == "POST" && !empty($_POST['action']) && $_POST['
                                 <?= $user_row['username'] ?>
                                 <br>
                                 <img src="<?= $user_row['image'] ?>"
-                                    style="border-radius:10px; width:100px; height:100px; object-fit: cover; margin:10px;">
+                                    style="border-radius:50%; width:100px; height:100px; object-fit: cover; margin:10px;">
+                                <?= $row['date'] ?>;
                             </div>
 
                             <div style="flex:8">
@@ -224,6 +284,19 @@ if ($_SERVER['REQUEST_METHOD'] == "POST" && !empty($_POST['action']) && $_POST['
                                 <div>
                                     <?php echo $row['post'] ?>
                                 </div>
+                                <br>
+
+                                <a href="profile.php?action=post_edit&id=<?= $row['id'] ?>">
+                                    <button>Edit</button>
+                                </a>
+
+                                <a href="profile.php?action=post_delete&id=<?= $row['id'] ?>">
+                                    <button>Delete</button>
+                                </a>
+                                <br>
+                                <br>
+
+
                             </div>
                         </div>
                     <?php endwhile; ?>
