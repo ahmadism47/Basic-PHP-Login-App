@@ -64,6 +64,38 @@ if ($_SERVER['REQUEST_METHOD'] == "POST" && !empty($_POST['action']) && $_POST['
         header("Location: profile.php");
         die;
     }
+} elseif ($_SERVER['REQUEST_METHOD'] == "POST" && !empty($_POST['post'])) {
+
+    $image = '';
+    // echo "<pre>";
+    // print_r($_FILES);
+    // die();
+    if (!empty($_FILES['image']['name']) && $_FILES['image']['error'] == 0) {
+
+        $folder = 'uploads/';
+
+        if (!file_exists($folder)) {
+            mkdir($folder, 0777, true);
+        }
+        $image = $folder . $_FILES['image']['name'];
+
+        move_uploaded_file($_FILES['image']['tmp_name'], $image);
+
+    }
+
+    $post = addslashes($_POST['post']);
+    $date = addslashes(date('Y-m-d H:i:s'));
+    $id = $_SESSION['logged']['id'];
+
+
+    $query = "insert into posts (user_id,post,date,image) values ('$id','$post','$date','$image')";
+
+
+    $result = mysqli_query($con, $query);
+
+    header("Location: profile.php");
+    die;
+
 }
 
 ?>
@@ -147,12 +179,14 @@ if ($_SERVER['REQUEST_METHOD'] == "POST" && !empty($_POST['action']) && $_POST['
 
             <hr>
             <h5>Create a post</h5>
-            <form method="post" style="margin: auto; padding:10px;">
+            <form method="post" enctype="multipart/form-data" style="margin: auto; padding:10px;">
 
+                image: <input type="file" name="image">
                 <textarea name="post" rows="9"></textarea><br>
 
-
-                <button>Post</button>
+                <a href="profile.php?action=post">
+                    <button>Post</button>
+                </a>
             </form>
 
         <?php endif; ?>
