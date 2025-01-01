@@ -1,3 +1,8 @@
+<?php
+require "functions.php";
+
+check_login();
+?>
 <!DOCTYPE html>
 <html>
 

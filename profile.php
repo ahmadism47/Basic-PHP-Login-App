@@ -1,3 +1,8 @@
+<?php
+require "functions.php";
+
+check_login();
+?>
 <!DOCTYPE html>
 <html>
 
@@ -16,10 +21,10 @@
                 <td> <img src="img.jpg" style="width: 150px; height: 150px; object-fit: cover;"> </td>
             </tr>
             <tr>
-                <td>John</td>
+                <td><?php echo $_SESSION['logged']['username'] ?></td>
             </tr>
             <tr>
-                <td>John@gmail.com</td>
+                <td><?php echo $_SESSION['logged']['email'] ?></td>
             </tr>
         </table>
 
