@@ -2,9 +2,81 @@
 require "functions.php";
 
 check_login();
+///////////////////////////////// delete post ////////////////////
 
-//edit profile
-if ($_SERVER['REQUEST_METHOD'] == "POST" && !empty($_POST['action']) && $_POST['action'] == 'delete') {
+if ($_SERVER['REQUEST_METHOD'] == "POST" && !empty($_POST['action']) && $_POST['action'] == 'post_delete') {
+    $id = $_GET['id'] ?? 0;
+    $user_id = $_SESSION['logged']['id'];
+
+    $query = "select * from posts where id = '$id' && user_id = '$user_id' limit 1";
+    $result = mysqli_query($con, $query);
+    
+    if (mysqli_num_rows($result) > 0) {
+        $row = mysqli_fetch_assoc($result);
+
+        if (file_exists($row['image'])) {
+            unlink($row['image']);
+        }
+    }
+
+    $query = "delete from posts where id = '$id' && user_id = '$user_id' limit 1";
+    $result = mysqli_query($con, $query);
+
+
+    header("Location: profile.php");
+    die;
+
+
+//////////////////////////////////  edit post  ///////////////////////
+
+} elseif ($_SERVER['REQUEST_METHOD'] == "POST" && !empty($_POST['action']) && $_POST['action'] == 'post_edit') {
+
+    $image_added = false;
+      $id = $_GET['id'] ?? 0;
+    $user_id = $_SESSION['logged']['id'];
+
+    if (!empty($_FILES['image']['name']) && $_FILES['image']['error'] == 0 && $_FILES['image']['type'] == "image/jpeg") {
+
+        $folder = 'uploads/';
+
+        if (!file_exists($folder)) {
+            mkdir($folder, 0777, true);
+        }
+        $image = $folder . $_FILES['image']['name'];
+
+        move_uploaded_file($_FILES['image']['tmp_name'], $image);
+
+        $query = "select * from posts where id = '$id' && user_id = '$user_id' limit 1";
+        $result = mysqli_query($con, $query);
+        
+        if (mysqli_num_rows($result) > 0) {
+            $row = mysqli_fetch_assoc($result);
+    
+            if (file_exists($row['image'])) {
+                unlink($row['image']);
+            }
+        }
+        $image_added = true;
+    }
+
+    $post = addslashes($_POST['post']);
+
+    if ($image_added == true) {
+        $query = "update posts set post = '$post', image = '$image' where id = '$id' && user_id = '$user_id' limit 1";
+    } else {
+        $query = "update posts set post = '$post' where id = '$id' && user_id = '$user_id' limit 1";
+    }
+
+    $result = mysqli_query($con, $query);
+
+   
+        header("Location: profile.php");
+        die;
+    
+}
+///////////////////////////////// delete profile ////////////////////
+
+elseif ($_SERVER['REQUEST_METHOD'] == "POST" && !empty($_POST['action']) && $_POST['action'] == 'delete') {
 
     $id = $_SESSION['logged']['id'];
     $query = "delete from users where id = '$id' limit 1";
@@ -14,12 +86,15 @@ if ($_SERVER['REQUEST_METHOD'] == "POST" && !empty($_POST['action']) && $_POST['
         unlink($_SESSION['logged']['image']);
     }
 
-    $query = "delete ferom posts where user_id = '$id'";
+    $query = "delete from posts where user_id = '$id'";
     $result = mysqli_query($con, $query);
 
 
     header("Location: logout.php");
     die;
+
+
+//////////////////////////////////  edit profile  ///////////////////////
 
 } elseif ($_SERVER['REQUEST_METHOD'] == "POST" && !empty($_POST['username'])) {
 
@@ -68,6 +143,8 @@ if ($_SERVER['REQUEST_METHOD'] == "POST" && !empty($_POST['action']) && $_POST['
         header("Location: profile.php");
         die;
     }
+
+////////////////////////////// add a profile ///////////////////////////////
 } elseif ($_SERVER['REQUEST_METHOD'] == "POST" && !empty($_POST['post'])) {
 
     $image = '';
@@ -118,7 +195,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST" && !empty($_POST['action']) && $_POST['
 
         <?php if (!empty($_GET['action']) && $_GET['action'] == 'post_edit' && !empty($_GET['id'])): ?>
             <?php
-            $id = $_GET['id'];
+            $id = (int)$_GET['id'];
             $query = "select * from posts where id = '$id' limit 1";
             $result = mysqli_query($con, $query);
             ?>
@@ -146,7 +223,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST" && !empty($_POST['action']) && $_POST['
 
         <?php elseif (!empty($_GET['action']) && $_GET['action'] == 'post_delete' && !empty($_GET['id'])): ?>
             <?php
-            $id = $_GET['id'];
+            $id = (int)$_GET['id'];
             $query = "select * from posts where id = '$id' limit 1";
             $result = mysqli_query($con, $query);
             ?>
@@ -203,6 +280,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST" && !empty($_POST['action']) && $_POST['
                     <div> <?php echo $_SESSION['logged']['username'] ?> </div>
                     <div> <?php echo $_SESSION['logged']['email'] ?> </div>
                     <input type="hidden" name="action" value="delete">
+                   
                     <button>Delete</button>
                     <a href="profile.php">
                         <button type="button">Cancel</button>
